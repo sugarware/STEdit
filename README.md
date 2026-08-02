@@ -1,0 +1,2 @@
+# STEdit
+Simple Text Editor
