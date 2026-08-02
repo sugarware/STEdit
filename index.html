@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#121416">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="STEdit">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+<meta name="application-name" content="STEdit">
+<meta name="format-detection" content="telephone=no">
+<title>STEdit v0.3c6</title>
+<style>
+:root{
+  --app-bg:#f6f7f9;--panel:#fff;--line:#d8dce3;--text:#1f2937;--muted:#667085;--muted-strong:#475467;
+  --accent:#2563eb;--accent-bg:#eaf1ff;--button-bg:#f1f5f9;--button-fg:#0f172a;--button-border:#cbd5e1;
+  --button-active-bg:#dbeafe;--input-bg:#fff;--input-fg:#1f2937;
+  --ui-font:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",sans-serif;
+  --ui-size:16px;--ui-fg:#1f2937;--ui-bg:#fff;
+  --editor-font:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --editor-size:16px;--editor-fg:#1f2937;--editor-bg:#fff;--line-height:1.65;
+  --gutter-bg:#f4f6f8;--gutter-fg:#7b8494;--cursor-line-bg:rgba(37,99,235,.09);--invisible-fg:#8b72b8;--search-hit-bg:rgba(250,204,21,.30);--search-current-bg:rgba(249,115,22,.38);--search-current-border:#f97316;--nav-cursor:var(--accent);--nav-hit:#eab308;--nav-current:#f97316;--active-pane:#3b82f6;
+}
+*{box-sizing:border-box}
+html{height:100%;margin:0;overflow:hidden;background:var(--app-bg)}
+body{position:relative;isolation:isolate;height:var(--visual-viewport-height,100dvh);max-height:var(--visual-viewport-height,100dvh);margin:0;font-family:var(--ui-font);font-size:var(--ui-size);color:var(--ui-fg);background:var(--app-bg);display:flex;flex-direction:column;overflow:hidden}
+body::before{content:"";position:fixed;z-index:-1;inset:-100vh -100vw;background:var(--app-bg);pointer-events:none}
+button,input,select,textarea{font:inherit}button{height:2.25em;border:1px solid var(--button-border);border-radius:7px;background:var(--button-bg);color:var(--button-fg);padding:0 10px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+button:disabled{opacity:.45}button.active{background:var(--button-active-bg);border-color:var(--accent);font-weight:700}button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+input[type=text],input[type=search],input[type=number],select{height:2.25em;border:1px solid var(--line);border-radius:7px;background:var(--input-bg);color:var(--input-fg);padding:0 8px}.hidden{display:none!important}
+header{flex:0 0 auto;padding:calc(8px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) 8px calc(10px + env(safe-area-inset-left));background:var(--ui-bg);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:7px}
+.topbar{display:flex;align-items:center;gap:7px;min-width:0}#appTitle{font-size:1.05em;font-weight:700;white-space:nowrap}#docTitle{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted-strong);font-weight:700}#dirtyMark{color:#dc2626;font-weight:900}.spacer{flex:1}.iconBtn{min-width:3em;padding:0 8px;font-weight:700}.historyIconBtn{width:3em;min-width:3em;padding:0;display:inline-flex;align-items:center;justify-content:center}.historyIconBtn svg{width:1.45em;height:1.45em;fill:none;stroke:currentColor;stroke-width:2.15;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.searchPanel{display:flex;flex-direction:column;gap:6px}.searchRow,.replaceRow{display:flex;align-items:center;gap:6px}.searchInputWrap{position:relative;display:flex;flex:1;min-width:80px}.searchField{width:100%;min-width:80px;padding-right:2.2em!important}.clearInputBtn{position:absolute;right:2px;top:2px;width:2em;min-width:2em;height:calc(100% - 4px);padding:0;border:0;background:transparent;color:var(--muted-strong);font-weight:800}.searchResults{height:132px;min-height:72px;max-height:45vh;overflow:auto;border:2px solid transparent;border-radius:8px;background:var(--input-bg);position:relative;font-size:var(--search-pane-size,14px);line-height:1.2}.searchResults.activePane{border-color:var(--active-pane);box-shadow:0 0 0 1px color-mix(in srgb,var(--active-pane) 35%,transparent)}.searchResultsInner{position:relative;min-height:100%}.searchResultItem{position:absolute;left:0;right:0;height:34px;padding:3px 9px;border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;line-height:1.2}.searchResultItem.current{background:var(--button-active-bg);font-weight:700}.searchResultLine{font-size:.78em;color:var(--muted)}.searchResultText{overflow:hidden;text-overflow:ellipsis}.searchEmpty{padding:12px;color:var(--muted);text-align:center}.paneResizeHandle{height:18px;cursor:ns-resize;touch-action:none;position:relative;background:transparent;border:0}.paneResizeHandle::after{content:"";position:absolute;left:0;right:0;top:4px;height:8px;background:color-mix(in srgb,var(--active-pane) 12%,transparent);border-top:1px solid color-mix(in srgb,var(--active-pane) 48%,transparent);border-bottom:1px solid color-mix(in srgb,var(--active-pane) 48%,transparent)}.paneResizeHandle::before{content:"";position:absolute;z-index:1;left:18%;right:18%;top:6px;height:5px;border-radius:4px;background:var(--active-pane);box-shadow:0 0 5px color-mix(in srgb,var(--active-pane) 70%,transparent)}.counter{min-width:5em;text-align:center;font-weight:800;color:var(--muted-strong);background:var(--button-bg);border:1px solid var(--button-border);border-radius:7px;padding:.35em .55em}
+main{flex:1;min-height:0;padding-bottom:env(safe-area-inset-bottom)}
+.editorShell{position:relative;width:100%;height:100%;background:var(--editor-bg);overflow:hidden;border:2px solid transparent}.editorShell.activePane{border-color:var(--active-pane);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--active-pane) 35%,transparent)}
+#virtualScroller{position:absolute;inset:0 0 32px 0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;background:var(--editor-bg);touch-action:pan-x pan-y}
+#virtualCanvas{position:relative;min-width:100%;height:1px}
+#gutterLayer{position:absolute;left:0;top:0;width:5.2em;min-height:100%;background:var(--gutter-bg);border-right:1px solid var(--line);pointer-events:none;z-index:2;overflow:hidden}
+#textAreaWindow{position:absolute;z-index:3;left:5.2em;top:0;border:0;outline:0;resize:none;overflow:hidden;white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere;wrap:soft;padding:0 56px 0 14px;margin:0;background:transparent;color:var(--editor-fg);caret-color:var(--accent);font-family:var(--editor-font);font-size:var(--editor-size);line-height:var(--line-height);tab-size:4;text-rendering:optimizeSpeed}
+#textAreaWindow::selection{background:color-mix(in srgb,var(--accent) 28%,transparent)}
+#cursorLine{position:absolute;z-index:1;left:5.2em;right:0;height:1px;background:var(--cursor-line-bg);pointer-events:none}
+#searchCanvas{position:absolute;z-index:2;left:5.2em;top:0;pointer-events:none}
+#invisibleCanvas{position:absolute;z-index:4;left:5.2em;top:0;pointer-events:none}
+#persistentCaret{position:absolute;z-index:5;width:2px;background:var(--accent);pointer-events:none;display:none}
+.gutterNumber{position:absolute;left:0;right:0;padding-right:10px;text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:var(--editor-size);line-height:var(--line-height);font-variant-numeric:tabular-nums;color:var(--gutter-fg);white-space:nowrap}
+#scrollRail{position:absolute;z-index:8;top:4px;right:1px;bottom:36px;width:24px;border-radius:12px;touch-action:none}#navMarkers{position:absolute;z-index:1;inset:2px 3px;pointer-events:none}.navMarker{position:absolute;left:0;right:0;border-radius:2px;transform:translateY(-50%)}.navMarker.hit{height:2px;background:var(--nav-hit);opacity:.75}.navMarker.current{height:4px;background:var(--nav-current);opacity:1}.navMarker.cursor{height:5px;background:var(--nav-cursor);box-shadow:0 0 3px rgba(0,0,0,.55)}#scrollThumb{z-index:2;position:absolute;left:4px;right:4px;top:0;min-height:46px;border-radius:10px;background:color-mix(in srgb,var(--muted-strong) 68%,transparent);border:2px solid color-mix(in srgb,var(--editor-bg) 75%,transparent);box-shadow:0 1px 3px rgba(0,0,0,.28)}
+.statusbar{position:absolute;z-index:10;left:0;right:0;bottom:0;min-height:32px;padding:6px 12px;display:flex;align-items:center;gap:12px;background:color-mix(in srgb,var(--editor-bg) 92%,transparent);border-top:1px solid var(--line);font-size:.82em;color:var(--muted);pointer-events:none}.statusbar span{white-space:nowrap}
+.popupMenu{position:fixed;z-index:5600;min-width:230px;padding:6px;border:1px solid var(--line);border-radius:12px;background:var(--ui-bg);box-shadow:0 8px 24px rgba(0,0,0,.22)}.popupMenu .menuTitle{padding:7px 10px;font-weight:700;color:var(--muted);border-bottom:1px solid var(--line)}.popupMenu button{display:block;width:100%;height:auto;min-height:2.5em;text-align:left;border:0;background:transparent;color:inherit;padding:9px 11px}.popupMenu .menuFooter{display:flex;justify-content:flex-end;border-top:1px solid var(--line);padding:7px}.popupMenu .menuFooter button{width:auto;border:1px solid var(--button-border);background:var(--button-bg)}
+.overlay{position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:14px}.dialog{width:min(640px,100%);max-height:88vh;overflow:auto;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 44px rgba(0,0,0,.3);padding:14px}.dialog h2{font-size:1.1em;margin:0 0 12px}.dialog h3{font-size:.95em;margin:18px 0 8px;padding-top:10px;border-top:1px solid var(--line)}.settingGrid{display:grid;grid-template-columns:minmax(9em,1fr) minmax(10em,1.4fr);gap:9px 12px;align-items:center}.settingGrid select,.settingGrid input{width:100%}details.settingDetail{margin-top:12px;border:1px solid var(--line);border-radius:9px;padding:8px}details.settingDetail summary{cursor:pointer;font-weight:700}.dialogActions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap}.fileButtons{display:flex;gap:8px;flex-wrap:wrap}.numericPad{position:fixed;z-index:8000;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(360px,calc(100vw - 24px));padding:10px;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--text);box-shadow:0 12px 36px rgba(0,0,0,.35)}.numericPadDisplay{height:2.5em;border:1px solid var(--line);border-radius:8px;background:var(--input-bg);color:var(--input-fg);padding:8px 10px;text-align:right;font-size:1.15em;margin-bottom:8px;overflow:hidden}.numericPadGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.numericPadGrid button{height:3em;font-size:1.1em}.numericPadActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}
+.toast{position:fixed;z-index:7000;left:50%;bottom:calc(48px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:calc(100vw - 24px);padding:9px 14px;border-radius:999px;background:#111827;color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.25);font-weight:700;font-size:.9em}
+input[type=file]{display:none}
+body.landscape-search-layout.search-pane-open main{margin-left:var(--search-pane-width,340px)}
+body.landscape-search-layout .searchPanel:not(.hidden){position:static;width:auto;padding:0;background:transparent;border:0;display:flex;flex-direction:column;gap:6px}
+body.landscape-search-layout .searchPanel .searchResults{position:fixed;z-index:30;left:4px;top:calc(var(--landscape-header-height,96px) + 2px);bottom:4px;width:calc(var(--search-pane-width,340px) - 8px);height:auto!important;max-height:none;min-height:72px;border-radius:8px;border:2px solid transparent}
+body.landscape-search-layout .searchPanel .searchResults.activePane{border-color:var(--active-pane);box-shadow:0 0 0 1px color-mix(in srgb,var(--active-pane) 35%,transparent)}
+body.landscape-search-layout .searchPanel .paneResizeHandle{position:fixed;z-index:31;top:var(--landscape-header-height,96px);left:calc(var(--search-pane-width,340px) - 9px);bottom:0;width:18px;height:auto;cursor:ew-resize;touch-action:none;background:color-mix(in srgb,var(--active-pane) 12%,transparent);border-left:1px solid color-mix(in srgb,var(--active-pane) 48%,transparent);border-right:1px solid color-mix(in srgb,var(--active-pane) 48%,transparent)}
+body.landscape-search-layout .searchPanel .paneResizeHandle::before{left:6px;right:auto;top:18%;bottom:18%;width:5px;height:auto;border-radius:4px;background:var(--active-pane);box-shadow:0 0 5px color-mix(in srgb,var(--active-pane) 70%,transparent)}
+@media(max-width:640px){.topbar{gap:5px}.iconBtn{min-width:2.7em;padding:0 6px}.searchRow,.replaceRow{flex-wrap:wrap}.searchField{flex:1 1 calc(100% - 11em)}#gutterLayer{width:4.2em}#textAreaWindow,#cursorLine,#searchCanvas,#invisibleCanvas{left:4.2em}.settingGrid{grid-template-columns:1fr}.statusbar{gap:8px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="topbar"><span id="appTitle">STEdit</span><span id="docTitle">新規文書.txt</span><span id="dirtyMark" class="hidden">●</span><span class="spacer"></span>
+    <button id="fileBtn" class="iconBtn">File</button><button id="undoBtn" class="iconBtn historyIconBtn" title="元に戻す" aria-label="元に戻す"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.2 7.2A7.5 7.5 0 1 1 5 13"/><path d="M8.2 3.8v3.4H4.8"/></svg></button><button id="redoBtn" class="iconBtn historyIconBtn" title="やり直す" aria-label="やり直す"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.8 7.2A7.5 7.5 0 1 0 19 13"/><path d="M15.8 3.8v3.4h3.4"/></svg></button><button id="fontBtn" class="iconBtn">A+</button><button id="tabBtn" class="iconBtn">Tab</button><button id="searchBtn" class="iconBtn">検索</button><button id="settingsBtn" class="iconBtn">設定</button>
+  </div>
+  <div id="searchPanel" class="searchPanel hidden"><div class="searchRow"><div class="searchInputWrap"><input id="searchText" class="searchField" type="search" placeholder="検索文字列"><button id="searchClearBtn" class="clearInputBtn" aria-label="検索文字列を消去">×</button></div><button id="searchExecBtn" title="タップ:カーソル以降 / ダブルタップ:先頭から">🔍</button><button id="searchArrowBtn">→</button><span id="hitCounter" class="counter">0 / 0</span><button id="replaceToggleBtn">置換</button></div><div id="replaceRow" class="replaceRow hidden"><div class="searchInputWrap"><input id="replaceText" class="searchField" type="text" placeholder="置換文字列"><button id="replaceClearBtn" class="clearInputBtn" aria-label="置換文字列を消去">×</button></div><button id="replaceBtn">単置換</button><button id="replaceAllBtn">全置換</button></div><div id="searchResults" class="searchResults"><div id="searchResultsInner" class="searchResultsInner"><div class="searchEmpty">検索を実行してください</div></div></div><div id="paneResizeHandle" class="paneResizeHandle" title="ドラッグして検索ペーンの高さを変更"></div></div>
+</header>
+<main><div class="editorShell"><div id="virtualScroller"><div id="virtualCanvas"><div id="gutterLayer"></div><div id="cursorLine"></div><canvas id="searchCanvas"></canvas><textarea id="textAreaWindow" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off" wrap="soft" aria-label="本文編集"></textarea><canvas id="invisibleCanvas" class="hidden"></canvas><div id="persistentCaret" aria-hidden="true"></div></div></div><div id="scrollRail"><div id="navMarkers"></div><div id="scrollThumb"></div></div><div class="statusbar"><span id="statusPos">1行 1列</span><span id="statusCount">1行 0文字</span><span id="statusSelect">選択 0文字</span><span id="statusEngine">Virtual / 0行描画</span><span id="statusEncoding">UTF-8 / LF</span><span id="statusBackup">バックアップ済み</span></div></div></main>
+<input id="fileInput" type="file" accept=".txt,.md,.markdown,.html,.htm,.css,.js,.json,.csv,.log,.xml,text/*">
+<div id="fileMenu" class="popupMenu hidden"><div class="menuTitle">ファイル</div><button id="fileNewBtn">新規文書</button><button id="fileOpenBtn">ファイルを開く</button><button id="fileSaveBtn">ファイル保存</button><button id="fileSaveAsBtn">名前を付けて保存</button><div class="menuFooter"><button id="fileMenuCloseBtn">閉じる</button></div></div>
+<div id="settingsOverlay" class="overlay hidden"><section class="dialog"><h2>STEdit 設定</h2><h3>表示</h3><div class="settingGrid"><label>配色</label><select id="themeSelect"><option value="light">ライト</option><option value="dark">ダーク</option><option value="customLight">カスタムライト</option><option value="customDark">カスタムダーク</option></select></div><div class="fileButtons" style="margin-top:9px"><button id="editCustomLightBtn" class="hidden">カスタムライト詳細</button><button id="editCustomDarkBtn" class="hidden">カスタムダーク詳細</button></div><div class="settingGrid" style="margin-top:9px"><label>本文フォント</label><select id="fontFamily"><option value="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">等幅</option><option value="-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Yu Gothic',sans-serif">ゴシック</option><option value="'Hiragino Mincho ProN','Yu Mincho',serif">明朝</option></select><label>文字サイズ</label><input id="fontSize" type="text" inputmode="none" readonly data-numeric="integer" data-min="9" data-max="36" value="16"><label>行間</label><input id="lineHeight" type="text" inputmode="none" readonly data-numeric="decimal" data-min="1.1" data-max="2.5" value="1.65"><label>行番号</label><select id="lineNumberSelect"><option value="true">表示</option><option value="false">非表示</option></select><label>不可視文字</label><select id="invisibleSelect"><option value="false">通常表示</option><option value="true">半角・全角・Tabを表示</option></select><label>タブ幅</label><select id="tabSize"><option>2</option><option selected>4</option><option>8</option></select><label>仮想バッファ</label><select id="bufferLines"><option value="40">40行</option><option value="80" selected>80行</option><option value="160">160行</option></select></div><h3>ファイル</h3><div class="fileButtons"><button id="restoreBackupBtn">バックアップから復元</button><button id="clearBackupBtn">バックアップを削除</button></div><div class="dialogActions"><button id="aboutBtn">STEdit情報</button><button id="settingsCloseBtn" class="primary">閉じる</button></div></section></div>
+<div id="colorOverlay" class="overlay hidden"><section class="dialog"><h2>表示カスタマイズ</h2><input id="customThemeSelect" type="hidden" value="customLight">
+<details class="settingDetail" open><summary>システム（メニュー・設定）</summary><div class="settingGrid">
+<label>フォント</label><select id="uiFontFamily"><option value="-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Yu Gothic',sans-serif">ゴシック</option><option value="'Hiragino Mincho ProN','Yu Mincho',serif">明朝</option><option value="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">等幅</option></select>
+<label>文字サイズ</label><input id="uiFontSize" type="text" inputmode="none" readonly data-numeric="integer" data-min="9" data-max="28">
+<label>文字色</label><input id="uiFg" type="color"><label>背景色</label><input id="uiBg" type="color"></div></details>
+<details class="settingDetail" open><summary>本文ペーン</summary><div class="settingGrid">
+<label>フォント</label><select id="customFontFamily"><option value="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">等幅</option><option value="-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Yu Gothic',sans-serif">ゴシック</option><option value="'Hiragino Mincho ProN','Yu Mincho',serif">明朝</option></select>
+<label>文字サイズ</label><input id="customFontSize" type="text" inputmode="none" readonly data-numeric="integer" data-min="9" data-max="36"><label>行間</label><input id="customLineHeight" type="text" inputmode="none" readonly data-numeric="decimal" data-min="1.1" data-max="2.5">
+<label>文字色</label><input id="editorFg" type="color"><label>背景色</label><input id="editorBg" type="color"><label>行番号文字色</label><input id="gutterFg" type="color"><label>行番号背景色</label><input id="gutterBg" type="color"><label>カーソル行強調色</label><input id="cursorLineColor" type="color"></div></details>
+<div class="dialogActions"><button id="colorResetBtn">標準値に戻す</button><button id="colorCloseBtn" class="primary">閉じる</button></div></section></div>
+<div id="confirmOverlay" class="overlay hidden"><section class="dialog"><h2 id="confirmTitle">確認</h2><div id="confirmMessage"></div><div id="confirmActions" class="dialogActions"></div></section></div><div id="numericPad" class="numericPad hidden" aria-label="数値入力"><div id="numericPadDisplay" class="numericPadDisplay"></div><div class="numericPadGrid"><button data-num="7">7</button><button data-num="8">8</button><button data-num="9">9</button><button data-num="4">4</button><button data-num="5">5</button><button data-num="6">6</button><button data-num="1">1</button><button data-num="2">2</button><button data-num="3">3</button><button data-num=".">.</button><button data-num="0">0</button><button data-num="back">⌫</button></div><div class="numericPadActions"><button id="numericCancelBtn">取消</button><button id="numericOkBtn" class="primary">決定</button></div></div>
+<div id="toast" class="toast hidden"></div>
+<script>
+"use strict";
+const SETTINGS_KEY="stedit_v03_settings",BACKUP_KEY="stedit_v03_backup",BACKUP_PREV_KEY="stedit_v03_backup_prev";
+const el=id=>document.getElementById(id),scroller=el("virtualScroller"),canvas=el("virtualCanvas"),editor=el("textAreaWindow"),gutter=el("gutterLayer");
+const fontSans="-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Yu Gothic',sans-serif",fontMono="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
+const themeDefaults={light:{uiFontFamily:fontSans,uiFontSize:16,uiFg:"#1f2937",uiBg:"#ffffff",fontFamily:fontMono,fontSize:16,lineHeight:1.65,fg:"#1f2937",bg:"#ffffff",gutterFg:"#7b8494",gutterBg:"#f4f6f8",cursorLine:"#6b9cff"},dark:{uiFontFamily:fontSans,uiFontSize:16,uiFg:"#e6e8ec",uiBg:"#202226",fontFamily:fontMono,fontSize:16,lineHeight:1.65,fg:"#e6e8ec",bg:"#181a1e",gutterFg:"#9ca3af",gutterBg:"#202226",cursorLine:"#6f91c7"},customLight:{uiFontFamily:fontSans,uiFontSize:16,uiFg:"#1f2937",uiBg:"#ffffff",fontFamily:fontMono,fontSize:16,lineHeight:1.65,fg:"#1f2937",bg:"#ffffff",gutterFg:"#7b8494",gutterBg:"#f4f6f8",cursorLine:"#6b9cff"},customDark:{uiFontFamily:fontSans,uiFontSize:16,uiFg:"#e6e8ec",uiBg:"#202226",fontFamily:fontMono,fontSize:16,lineHeight:1.65,fg:"#e6e8ec",bg:"#181a1e",gutterFg:"#9ca3af",gutterBg:"#202226",cursorLine:"#6f91c7"}};
+const settings={theme:"light",fontFamily:fontMono,fontSize:16,lineHeight:1.65,lineNumbers:true,showInvisibles:false,tabSize:4,bufferLines:80,wrap:true,searchFontSize:14,searchPaneHeight:132,searchPaneWidth:340,activePane:"editor",customLight:{...themeDefaults.customLight},customDark:{...themeDefaults.customDark}};
+const state={fileName:"新規文書.txt",lines:[""],savedText:"",dirty:false,lineEnding:"LF",encoding:"UTF-8",windowStart:0,windowEnd:1,windowText:"",undo:[],redo:[],pendingBefore:null,historyTimer:0,backupTimer:0,searchMatches:[],searchIndex:-1,searchOpen:false,replaceOpen:false,searchValid:false,searchOrigin:0,searchQuery:"",resultItemHeight:34,programmaticSelection:false,globalAnchor:0,globalFocus:0,navigationActive:false,navigationAnchor:0,navigationFocus:0,selectionIgnoreUntil:0,renderToken:0,layoutDirty:true,lineTops:[0,1],lineRows:[1],totalRows:1,activePane:"editor"};
+function showToast(m){const t=el("toast");t.textContent=m;t.classList.remove("hidden");clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>t.classList.add("hidden"),1800)}
+function docText(){return state.lines.join("\n")}
+// Safari/iPadのtextareaは小数行高を内部で丸めるため、仮想座標と実描画に累積誤差が生じる。
+// 本文・行番号・カーソル行・不可視文字で同一の整数px行高を使用する。
+function lineHeightPx(){return Math.max(1,Math.round(Number(settings.fontSize)*Number(settings.lineHeight)))}function gutterWidth(){return settings.lineNumbers?(innerWidth<=640?4.2:5.2)*settings.fontSize:0}
+let layoutMeasureCtx=null;
+function editorTextWidth(){
+  const cs=getComputedStyle(editor),pl=parseFloat(cs.paddingLeft)||14,pr=parseFloat(cs.paddingRight)||56;
+  const box=editor.clientWidth||Math.max(1,scroller.clientWidth-(settings.lineNumbers?gutterWidth():0));
+  return Math.max(40,box-pl-pr);
+}
+function markLayoutDirty(){state.layoutDirty=true}
+function measureWrappedRows(text,width){
+  if(!layoutMeasureCtx)layoutMeasureCtx=document.createElement("canvas").getContext("2d");
+  const x=layoutMeasureCtx;x.font=`${settings.fontSize}px ${settings.fontFamily}`;
+  const space=Math.max(.1,x.measureText(" ").width),tab=space*(Number(settings.tabSize)||4);let row=1,px=0;
+  for(const ch of text){let w;if(ch==="\t")w=tab-(px%tab||0);else w=x.measureText(ch).width;if(px>0&&px+w>width){row++;px=0;if(ch==="\t")w=tab}px+=w}
+  return Math.max(1,row)
+}
+function ensureLayout(){
+  const width=editorTextWidth(),key=`${width}|${settings.fontSize}|${settings.fontFamily}|${settings.tabSize}|${state.lines.length}`;
+  if(!state.layoutDirty&&state.layoutKey===key)return;
+  const lh=lineHeightPx(),tops=new Array(state.lines.length+1),rows=new Array(state.lines.length);tops[0]=0;
+  for(let i=0;i<state.lines.length;i++){rows[i]=measureWrappedRows(state.lines[i],width);tops[i+1]=tops[i]+rows[i]*lh}
+  state.lineTops=tops;state.lineRows=rows;state.totalRows=tops.at(-1)/lh;state.layoutKey=key;state.layoutDirty=false;
+}
+function lineTopPx(line){ensureLayout();return state.lineTops[Math.max(0,Math.min(line,state.lines.length))]||0}
+function lineAtPixel(px){ensureLayout();let lo=0,hi=state.lines.length;while(lo+1<hi){const m=(lo+hi)>>1;if(state.lineTops[m]<=px)lo=m;else hi=m}return lo}
+function textPointInLine(line,col){
+  ensureLayout();if(!layoutMeasureCtx)layoutMeasureCtx=document.createElement("canvas").getContext("2d");const x=layoutMeasureCtx;x.font=`${settings.fontSize}px ${settings.fontFamily}`;
+  const width=editorTextWidth(),space=Math.max(.1,x.measureText(" ").width),tab=space*(Number(settings.tabSize)||4);let row=0,px=0;
+  const text=(state.lines[line]||"").slice(0,col);for(const ch of text){let w=ch==="\t"?tab-(px%tab||0):x.measureText(ch).width;if(px>0&&px+w>width){row++;px=0;if(ch==="\t")w=tab}px+=w}return{row,x:px}
+}
+function updateTitle(){el("docTitle").textContent=state.fileName;el("dirtyMark").classList.toggle("hidden",!state.dirty);document.title=(state.dirty?"● ":"")+"STEdit - "+state.fileName}
+function updateDirty(){state.dirty=docText()!==state.savedText;updateTitle()}
+function lineStartOffset(line){let n=0;for(let i=0;i<line;i++)n+=state.lines[i].length+1;return n}
+function offsetToPos(offset){offset=Math.max(0,Math.min(offset,docText().length));let n=0;for(let i=0;i<state.lines.length;i++){const end=n+state.lines[i].length;if(offset<=end)return{line:i,col:offset-n};n=end+1}return{line:state.lines.length-1,col:state.lines.at(-1).length}}
+function snapshot(){
+  const sel=globalSelectionSafe();
+  const search=(typeof searchModel!=="undefined"&&searchModel.valid)?{
+    valid:true,query:searchModel.query,origin:searchModel.origin,
+    currentOffset:searchModel.current>=0&&searchModel.matches[searchModel.current]?searchModel.matches[searchModel.current][0]:-1
+  }:{valid:false};
+  return{text:docText(),anchor:sel.anchor,focus:sel.focus,scrollTop:scroller.scrollTop,search};
+}
+function restoreSearchSnapshot(saved){
+  if(typeof searchModel==="undefined")return;
+  if(!saved||!saved.valid||!saved.query){searchModel.clear();updateSearchView("本文を復元しました。再検索してください");return}
+  searchModel.execute(docText(),saved.query,saved.origin);
+  let index=-1;
+  if(saved.currentOffset>=0){
+    index=searchModel.matches.findIndex(([a])=>a===saved.currentOffset);
+    if(index<0)index=searchModel.matches.findIndex(([a])=>a>=saved.currentOffset);
+  }
+  if(index<0&&searchModel.matches.length)index=0;
+  searchModel.current=index;
+  syncLegacySearchState();
+}
+function restore(s){
+  state.lines=s.text.split("\n");markLayoutDirty();state.globalAnchor=s.anchor;state.globalFocus=s.focus;scroller.scrollTop=s.scrollTop||0;state.windowStart=-1;
+  restoreSearchSnapshot(s.search);renderVirtual(true);updateSearchView();updateDirty();scheduleBackup();
+}
+function pushUndo(s){const last=state.undo.at(-1);if(last&&last.text===s.text)return;state.undo.push(s);if(state.undo.length>100)state.undo.shift();state.redo=[];updateUndoButtons()}
+function undo(){flushHistory();if(!state.undo.length)return;state.redo.push(snapshot());restore(state.undo.pop());updateUndoButtons()}function redo(){flushHistory();if(!state.redo.length)return;state.undo.push(snapshot());restore(state.redo.pop());updateUndoButtons()}function updateUndoButtons(){el("undoBtn").disabled=!state.undo.length;el("redoBtn").disabled=!state.redo.length}
+function beginHistory(){if(!state.pendingBefore)state.pendingBefore=snapshot();clearTimeout(state.historyTimer);state.historyTimer=setTimeout(flushHistory,700)}function flushHistory(){clearTimeout(state.historyTimer);if(state.pendingBefore){pushUndo(state.pendingBefore);state.pendingBefore=null}}
+function globalSelection(){const base=lineStartOffset(state.windowStart);return{anchor:base+editor.selectionStart,focus:base+editor.selectionEnd}}
+function setGlobalSelection(anchor,focus=anchor,ensure=true){state.globalAnchor=anchor;state.globalFocus=focus;const p=offsetToPos(focus);if(ensure){const lh=lineHeightPx();scroller.scrollTop=Math.max(0,lineTopPx(p.line)-scroller.clientHeight*.35)}renderVirtual(true);requestAnimationFrame(()=>{const base=lineStartOffset(state.windowStart);editor.setSelectionRange(Math.max(0,anchor-base),Math.max(0,focus-base));editor.focus();updateStatus()})}
+function visibleRange(){ensureLayout();const first=lineAtPixel(scroller.scrollTop),last=Math.min(state.lines.length,lineAtPixel(scroller.scrollTop+scroller.clientHeight)+2);return{first,last}}
+function desiredWindow(){const v=visibleRange(),b=Number(settings.bufferLines)||80;return{start:Math.max(0,v.first-b),end:Math.min(state.lines.length,v.last+b)}}
+function documentContentWidth(){return Math.max(1,scroller.clientWidth-(settings.lineNumbers?gutterWidth():0))}
+function applyWrapMode(){settings.wrap=true;editor.wrap="soft";editor.style.whiteSpace="pre-wrap";editor.style.wordBreak="break-all";editor.style.overflowWrap="anywhere"}
+function renderVirtual(force=false){ensureLayout();const w=desiredWindow();if(!force&&w.start===state.windowStart&&w.end===state.windowEnd){renderGutter();renderCursor();renderSearch();renderInvisible();updateScrollThumb();renderNavMarkers();return}
+  const sel=globalSelectionSafe();state.windowStart=w.start;state.windowEnd=w.end;state.windowText=state.lines.slice(w.start,w.end).join("\n");editor.value=state.windowText;
+  const lh=lineHeightPx(),left=settings.lineNumbers?gutterWidth():0,contentWidth=documentContentWidth();applyWrapMode();canvas.style.height=Math.max(scroller.clientHeight,lineTopPx(state.lines.length)+20)+"px";canvas.style.width=(left+contentWidth)+"px";editor.style.top=lineTopPx(w.start)+"px";editor.style.left=left+"px";editor.style.width=contentWidth+"px";editor.style.height=Math.max(lh,lineTopPx(w.end)-lineTopPx(w.start)+2)+"px";editor.style.fontSize=settings.fontSize+"px";editor.style.lineHeight=lh+"px";editor.style.fontFamily=settings.fontFamily;editor.style.tabSize=settings.tabSize;
+  const base=lineStartOffset(w.start);state.programmaticSelection=true;state.selectionIgnoreUntil=performance.now()+350;editor.setSelectionRange(Math.max(0,sel.anchor-base),Math.max(0,sel.focus-base));setTimeout(()=>{state.programmaticSelection=false},360);renderGutter();renderCursor();renderSearch();renderInvisible();updateStatus();updateScrollThumb();renderNavMarkers()}
+function globalSelectionSafe(){return{anchor:state.globalAnchor||0,focus:state.globalFocus||0}}
+function renderGutter(){gutter.classList.toggle("hidden",!settings.lineNumbers);if(!settings.lineNumbers)return;ensureLayout();const v=visibleRange(),frag=document.createDocumentFragment();gutter.innerHTML="";gutter.style.width=gutterWidth()+"px";for(let i=v.first;i<v.last&&i<state.lines.length;i++){const d=document.createElement("div");d.className="gutterNumber";d.textContent=i+1;d.style.top=lineTopPx(i)+"px";d.style.height=lineHeightPx()+"px";frag.appendChild(d)}gutter.appendChild(frag);el("statusEngine").textContent=`Virtual / ${Math.max(0,v.last-v.first)}論理行描画`}
+function renderCursor(){const s=globalSelectionSafe(),p=offsetToPos(s.focus),lh=lineHeightPx(),left=settings.lineNumbers?gutterWidth():0,pt=textPointInLine(p.line,p.col);const c=el("cursorLine");c.style.top=(lineTopPx(p.line)+pt.row*lh)+"px";c.style.left=left+"px";c.style.height=lh+"px";renderPersistentCaret(p);renderNavMarkers()}
+function renderPersistentCaret(pos=null){
+  const caret=el("persistentCaret");if(!caret)return;if(document.activeElement===editor){caret.style.display="none";return}
+  const p=pos||offsetToPos(state.globalFocus||0),pt=textPointInLine(p.line,p.col),lh=lineHeightPx();caret.style.left=((settings.lineNumbers?gutterWidth():0)+14+pt.x)+"px";caret.style.top=(lineTopPx(p.line)+pt.row*lh+Math.max(1,(lh-settings.fontSize)/2))+"px";caret.style.height=Math.max(settings.fontSize,lh-4)+"px";caret.style.display="block";
+}
+function canvasTextAdvance(ctx,text,startX=0){
+  // CanvasのmeasureText()はTabをtextareaと同じタブストップで扱わないため、
+  // 本文と同じ「半角スペース幅 × tabSize」の位置へ明示的に進める。
+  const space=Math.max(.1,ctx.measureText(" ").width),tab=space*(Number(settings.tabSize)||4);
+  let x=startX;
+  for(const ch of text){
+    if(ch==="\t")x=(Math.floor(x/tab)+1)*tab;
+    else x+=ctx.measureText(ch).width;
+  }
+  return x-startX;
+}
+function renderSearch(){
+  ensureLayout();const c=el("searchCanvas"),v=visibleRange(),lh=lineHeightPx(),left=settings.lineNumbers?gutterWidth():0,w=Math.max(1,scroller.clientWidth-left),top=lineTopPx(v.first),h=Math.max(1,lineTopPx(v.last)-top+lh),dpr=Math.min(2,devicePixelRatio||1);
+  c.style.left=left+"px";c.style.top=top+"px";c.style.width=w+"px";c.style.height=h+"px";c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);const x=c.getContext("2d");x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);if(!state.searchValid||!state.searchMatches.length)return;
+  x.font=`${settings.fontSize}px ${settings.fontFamily}`;const normalBg=getComputedStyle(document.documentElement).getPropertyValue("--search-hit-bg").trim()||"rgba(250,204,21,.30)",currentBg=getComputedStyle(document.documentElement).getPropertyValue("--search-current-bg").trim()||"rgba(249,115,22,.38)",currentBorder=getComputedStyle(document.documentElement).getPropertyValue("--search-current-border").trim()||"#f97316";
+  for(let i=0;i<state.searchMatches.length;i++){const [a,b]=state.searchMatches[i],p=offsetToPos(a),q=offsetToPos(b);if(q.line<v.first||p.line>=v.last)continue;for(let line=p.line;line<=q.line&&line<state.lines.length;line++){if(line<v.first||line>=v.last)continue;const startCol=line===p.line?p.col:0,endCol=line===q.line?q.col:state.lines[line].length,sp=textPointInLine(line,startCol),ep=textPointInLine(line,endCol);if(sp.row===ep.row){const x0=14+sp.x,x1=Math.max(x0+2,14+ep.x),y=lineTopPx(line)-top+sp.row*lh;x.fillStyle=i===state.searchIndex?currentBg:normalBg;x.fillRect(x0,y,x1-x0,lh);if(i===state.searchIndex){x.strokeStyle=currentBorder;x.lineWidth=1;x.strokeRect(x0+.5,y+.5,Math.max(1,x1-x0-1),Math.max(1,lh-1))}}else{for(let row=sp.row;row<=ep.row;row++){const x0=row===sp.row?14+sp.x:14,x1=row===ep.row?Math.max(x0+2,14+ep.x):w-4,y=lineTopPx(line)-top+row*lh;x.fillStyle=i===state.searchIndex?currentBg:normalBg;x.fillRect(x0,y,Math.max(2,x1-x0),lh)}}}}
+}
+function renderInvisible(){const c=el("invisibleCanvas");if(!settings.showInvisibles){c.classList.add("hidden");return}c.classList.remove("hidden");const v=visibleRange(),lh=lineHeightPx(),left=settings.lineNumbers?gutterWidth():0,w=Math.max(1,scroller.clientWidth-left),h=Math.max(1,(v.last-v.first+1)*lh),dpr=Math.min(2,devicePixelRatio||1);c.style.left=left+"px";c.style.top=(v.first*lh)+"px";c.style.width=w+"px";c.style.height=h+"px";c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);const x=c.getContext("2d");x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);x.font=`${settings.fontSize}px ${settings.fontFamily}`;x.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--invisible-fg").trim();x.textBaseline="alphabetic";const sw=x.measureText(" ").width,tab=sw*settings.tabSize;for(let line=v.first;line<v.last&&line<state.lines.length;line++){let px=14-scroller.scrollLeft,py=(line-v.first)*lh+(lh-settings.fontSize)/2+settings.fontSize*.82;for(const ch of state.lines[line]){if(ch===" "){x.fillText("·",px+(sw-x.measureText("·").width)/2,py);px+=sw}else if(ch==="　"){const cw=x.measureText(ch).width;x.fillText("□",px+(cw-x.measureText("□").width)/2,py);px+=cw}else if(ch==="\t"){x.fillText("→",px,py);px=(Math.floor((px-14)/tab)+1)*tab+14}else px+=x.measureText(ch).width;if(px>w+80)break}}}
+function updateStatus(){const s=globalSelectionSafe(),p=offsetToPos(s.focus);el("statusPos").textContent=`${p.line+1}行 ${p.col+1}列`;el("statusCount").textContent=`${state.lines.length}行 ${docText().length}文字`;el("statusSelect").textContent=`選択 ${Math.abs(s.focus-s.anchor)}文字`;el("statusEncoding").textContent=`${state.encoding} / ${state.lineEnding}`;renderCursor()}
+editor.addEventListener("beforeinput",()=>{
+  beginHistory();
+  const base=lineStartOffset(state.windowStart);
+  state.beforeEdit={start:base+editor.selectionStart,end:base+editor.selectionEnd,oldLength:editor.value.length,currentMatch:state.searchIndex>=0?state.searchMatches[state.searchIndex]?.slice():null};
+});
+editor.addEventListener("input",()=>{
+  const oldStart=state.windowStart,oldEnd=state.windowEnd,newLines=editor.value.split("\n"),edit=state.beforeEdit;
+  state.lines.splice(oldStart,oldEnd-oldStart,...newLines);markLayoutDirty();state.windowEnd=oldStart+newLines.length;state.windowText=editor.value;
+  const base=lineStartOffset(oldStart);state.globalAnchor=base+editor.selectionStart;state.globalFocus=base+editor.selectionEnd;
+  updateDirty();invalidateSearchResults("本文が変更されました。再検索してください");state.beforeEdit=null;renderVirtual(true);scheduleBackup();
+});
+["click","keyup","select","focus"].forEach(ev=>editor.addEventListener(ev,()=>{const s=globalSelection();state.globalAnchor=s.anchor;state.globalFocus=s.focus;updateStatus()}));editor.addEventListener("blur",()=>requestAnimationFrame(()=>renderPersistentCaret()));
+editor.addEventListener("keydown",e=>{const mod=e.ctrlKey||e.metaKey;if(mod&&e.key.toLowerCase()==="s"){e.preventDefault();saveFile(false)}else if(mod&&e.key.toLowerCase()==="f"){e.preventDefault();setSearchOpen(true)}else if(mod&&e.key.toLowerCase()==="h"){e.preventDefault();setSearchOpen(true);setReplaceOpen(true)}else if(mod&&e.key.toLowerCase()==="z"&&!e.shiftKey){e.preventDefault();undo()}else if((mod&&e.key.toLowerCase()==="y")||(mod&&e.shiftKey&&e.key.toLowerCase()==="z")){e.preventDefault();redo()}else if(e.key==="Tab"){e.preventDefault();beginHistory();editor.setRangeText("\t",editor.selectionStart,editor.selectionEnd,"end");editor.dispatchEvent(new Event("input"))}});
+let scrollRAF=0;scroller.addEventListener("scroll",()=>{if(!scrollRAF)scrollRAF=requestAnimationFrame(()=>{scrollRAF=0;renderVirtual(false)})});window.addEventListener("resize",()=>{updateSearchPaneLayout();markLayoutDirty();renderVirtual(true)});
+function updateScrollThumb(){const rail=el("scrollRail"),thumb=el("scrollThumb"),max=Math.max(0,scroller.scrollHeight-scroller.clientHeight);if(max<2){rail.classList.add("hidden");return}rail.classList.remove("hidden");const rh=rail.clientHeight,th=Math.max(46,rh*scroller.clientHeight/scroller.scrollHeight),travel=Math.max(1,rh-th);thumb.style.height=th+"px";thumb.style.transform=`translateY(${travel*scroller.scrollTop/max}px)`}
+(()=>{const rail=el("scrollRail"),thumb=el("scrollThumb");let sy=0,ss=0,drag=false;
+function beginNavigation(){state.navigationActive=true;state.navigationAnchor=state.globalAnchor||0;state.navigationFocus=state.globalFocus||0;state.selectionIgnoreUntil=performance.now()+1200}
+function preserveNavigationCursor(){if(!state.navigationActive)return;state.globalAnchor=state.navigationAnchor;state.globalFocus=state.navigationFocus;renderNavMarkers();renderPersistentCaret(offsetToPos(state.globalFocus))}
+function endNavigation(){preserveNavigationCursor();state.selectionIgnoreUntil=performance.now()+500;setTimeout(()=>{state.navigationActive=false;state.globalAnchor=state.navigationAnchor;state.globalFocus=state.navigationFocus;const base=lineStartOffset(state.windowStart);state.programmaticSelection=true;editor.setSelectionRange(Math.max(0,state.globalAnchor-base),Math.max(0,state.globalFocus-base));setTimeout(()=>{state.programmaticSelection=false},420);renderCursor();updateStatus()},420)}
+thumb.onpointerdown=e=>{beginNavigation();drag=true;sy=e.clientY;ss=scroller.scrollTop;thumb.setPointerCapture(e.pointerId);e.preventDefault()};
+thumb.onpointermove=e=>{if(!drag)return;const max=scroller.scrollHeight-scroller.clientHeight,travel=rail.clientHeight-thumb.offsetHeight;scroller.scrollTop=Math.max(0,Math.min(max,ss+(e.clientY-sy)*max/Math.max(1,travel)));preserveNavigationCursor();e.preventDefault()};
+thumb.onpointerup=thumb.onpointercancel=e=>{if(!drag)return;drag=false;endNavigation();try{thumb.releasePointerCapture(e.pointerId)}catch(_){}};
+rail.onpointerdown=e=>{if(e.target===thumb)return;beginNavigation();const r=rail.getBoundingClientRect();scroller.scrollTop=((e.clientY-r.top)/r.height)*(scroller.scrollHeight-scroller.clientHeight);preserveNavigationCursor();setTimeout(endNavigation,0);e.preventDefault()}
+})();
+function commitEditorWindow(){
+  if(state.windowStart<0||state.windowEnd<state.windowStart)return;
+  if(editor.value===state.windowText)return;
+  const newLines=editor.value.split("\n");
+  state.lines.splice(state.windowStart,state.windowEnd-state.windowStart,...newLines);markLayoutDirty();
+  state.windowEnd=state.windowStart+newLines.length;
+  state.windowText=editor.value;
+  const base=lineStartOffset(state.windowStart);
+  state.globalAnchor=base+editor.selectionStart;
+  state.globalFocus=base+editor.selectionEnd;
+}
+function loadDocument(text,name,saved=null,lineEnding=null,options={}){
+  if(typeof text!=="string")throw new TypeError("文書本文が文字列ではありません");
+  flushHistory();clearTimeout(state.backupTimer);
+  state.lines=text.replace(/\r\n/g,"\n").replace(/\r/g,"\n").split("\n");markLayoutDirty();
+  if(!state.lines.length)state.lines=[""];
+  state.fileName=name||"新規文書.txt";state.lineEnding=lineEnding||(/\r\n/.test(text)?"CRLF":"LF");
+  state.savedText=typeof saved==="string"?saved:(saved===null?docText():"");
+  state.undo=[];state.redo=[];state.globalAnchor=state.globalFocus=0;state.windowStart=-1;scroller.scrollTop=0;
+  resetSearchForDocumentChange();
+  updateDirty();updateUndoButtons();renderVirtual(true);
+  if(!options.skipBackup)scheduleBackup();
+  if(options.focus===true)editor.focus();else suppressKeyboard();
+}
+function backupHash(text){let h=2166136261;for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(16)}
+function makeBackupPayload(){
+  commitEditorWindow();
+  const text=docText();
+  return{version:"0.3c6",fileName:state.fileName,text,savedText:state.savedText,dirty:state.dirty,lineEnding:state.lineEnding,encoding:state.encoding,anchor:state.globalAnchor,focus:state.globalFocus,scrollTop:scroller.scrollTop,savedAt:new Date().toISOString(),length:text.length,lineCount:state.lines.length,hash:backupHash(text)};
+}
+function validBackup(b){return!!b&&typeof b.text==="string"&&(!b.hash||b.hash===backupHash(b.text))}
+function scheduleBackup(){el("statusBackup").textContent="バックアップ待機";clearTimeout(state.backupTimer);state.backupTimer=setTimeout(saveBackup,800)}
+function saveBackup(){
+  clearTimeout(state.backupTimer);
+  try{
+    const next=makeBackupPayload(),oldRaw=localStorage.getItem(BACKUP_KEY);
+    if(oldRaw){try{const old=JSON.parse(oldRaw);if(validBackup(old)&&old.text!==next.text)localStorage.setItem(BACKUP_PREV_KEY,oldRaw)}catch(_){}}
+    localStorage.setItem(BACKUP_KEY,JSON.stringify(next));
+    const check=JSON.parse(localStorage.getItem(BACKUP_KEY)||"null");
+    if(!validBackup(check)||check.text!==next.text)throw new Error("バックアップ検証失敗");
+    el("statusBackup").textContent="バックアップ済み";
+  }catch(e){console.error(e);el("statusBackup").textContent="バックアップ失敗";showToast("バックアップ保存に失敗しました")}
+}
+function clearBackup(){localStorage.removeItem(BACKUP_KEY);localStorage.removeItem(BACKUP_PREV_KEY);el("statusBackup").textContent="バックアップなし";showToast("バックアップを削除しました")}
+function readBackupCandidates(){
+  const out=[];
+  for(const [key,label] of [[BACKUP_KEY,"最新"],[BACKUP_PREV_KEY,"一世代前"]]){const raw=localStorage.getItem(key);if(!raw)continue;try{const b=JSON.parse(raw);if(validBackup(b))out.push({key,label,b})}catch(_){}}
+  return out;
+}
+function restoreBackup(){
+  const candidates=readBackupCandidates();
+  if(!candidates.length){showToast("復元できるバックアップはありません");return}
+  let chosen=candidates[0];
+  if(chosen.b.text.length===0){const nonEmpty=candidates.find(x=>x.b.text.length>0);if(nonEmpty)chosen=nonEmpty}
+  const b=chosen.b,date=b.savedAt?new Date(b.savedAt).toLocaleString("ja-JP"):"保存時刻不明",lines=b.lineCount||b.text.split("\n").length;
+  const msg=`${chosen.label}のバックアップ\n${b.fileName||"名称なし"}\n${date}\n${lines.toLocaleString()}行 / ${b.text.length.toLocaleString()}文字`;
+  confirmDialog("バックアップから復元",msg,[["復元",()=>{
+    const rollback={text:docText(),fileName:state.fileName,savedText:state.savedText,lineEnding:state.lineEnding,encoding:state.encoding,anchor:state.globalAnchor,focus:state.globalFocus,scrollTop:scroller.scrollTop};
+    try{
+      loadDocument(b.text,b.fileName||"復元文書.txt",typeof b.savedText==="string"?b.savedText:"",b.lineEnding||"LF",{skipBackup:true,focus:false});
+      state.encoding=b.encoding||"UTF-8";state.globalAnchor=Math.max(0,Math.min(Number(b.anchor)||0,b.text.length));state.globalFocus=Math.max(0,Math.min(Number(b.focus)||0,b.text.length));scroller.scrollTop=Math.max(0,Number(b.scrollTop)||0);state.windowStart=-1;renderVirtual(true);
+      if(docText()!==b.text)throw new Error("復元内容の検証に失敗");
+      updateDirty();suppressKeyboard();setTimeout(scheduleBackup,1500);showToast("バックアップを復元しました");
+    }catch(e){
+      console.error(e);loadDocument(rollback.text,rollback.fileName,rollback.savedText,rollback.lineEnding,{skipBackup:true,focus:false});state.encoding=rollback.encoding;state.globalAnchor=rollback.anchor;state.globalFocus=rollback.focus;scroller.scrollTop=rollback.scrollTop;state.windowStart=-1;renderVirtual(true);showToast("復元に失敗したため元の文書へ戻しました");
+    }
+  },true],["キャンセル",()=>{}]]);
+}
+function suppressKeyboard(){try{document.activeElement?.blur()}catch(_){};requestAnimationFrame(()=>{try{document.activeElement?.blur()}catch(_){}})}
+function confirmDialog(title,message,actions){el("confirmTitle").textContent=title;el("confirmMessage").textContent=message;const box=el("confirmActions");box.innerHTML="";actions.forEach(([label,fn,primary])=>{const b=document.createElement("button");b.textContent=label;if(primary)b.classList.add("primary");b.onclick=()=>{el("confirmOverlay").classList.add("hidden");fn&&fn()};box.appendChild(b)});el("confirmOverlay").classList.remove("hidden")}
+function guardUnsaved(action){if(!state.dirty)return action();confirmDialog("未保存の変更","変更内容が保存されていません。",[["保存",async()=>{if(await saveFile(false))action()},true],["保存せず続行",action],["キャンセル",()=>{}]])}
+function openFile(){guardUnsaved(()=>el("fileInput").click())}el("fileInput").onchange=async e=>{const f=e.target.files?.[0];e.target.value="";if(!f)return;const buf=await f.arrayBuffer();let text;try{text=new TextDecoder("utf-8",{fatal:true}).decode(buf);state.encoding="UTF-8"}catch(_){text=new TextDecoder("shift_jis").decode(buf);state.encoding="Shift_JIS"}loadDocument(text,f.name,null,/\r\n/.test(text)?"CRLF":"LF");showToast("ファイルを開きました")};
+function downloadFile(name,text){const blob=new Blob([text],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}async function saveFile(saveAs=false){flushHistory();let name=state.fileName;if(saveAs||name==="新規文書.txt"){const n=prompt("保存するファイル名",name);if(n===null)return false;name=n.trim()||name;state.fileName=name}const text=state.lineEnding==="CRLF"?docText().replace(/\n/g,"\r\n"):docText();downloadFile(name,text);state.savedText=docText();updateDirty();saveBackup();showToast("保存しました");return true}
+function escapeRegExp(s){return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}
+class SearchModel{
+  constructor(){this.clear()}
+  clear(){this.query="";this.origin=0;this.matches=[];this.current=-1;this.valid=false}
+  execute(text,query,origin){this.query=query;this.origin=Math.max(0,origin||0);this.matches=[];const re=new RegExp(escapeRegExp(query),"gi");let m;while((m=re.exec(text))){if(m.index>=this.origin)this.matches.push([m.index,m.index+m[0].length]);if(!m[0].length)re.lastIndex++}this.current=this.matches.length?0:-1;this.valid=true}
+  setCurrent(index){if(!this.valid||index<0||index>=this.matches.length)return false;this.current=index;return true}
+  next(step=1){if(!this.valid||!this.matches.length)return false;this.current=this.current<0?(step>0?0:this.matches.length-1):(this.current+step+this.matches.length)%this.matches.length;return true}
+}
+const searchModel=new SearchModel();
+function syncLegacySearchState(){state.searchMatches=searchModel.matches;state.searchIndex=searchModel.current;state.searchValid=searchModel.valid;state.searchQuery=searchModel.query;state.searchOrigin=searchModel.origin}
+function updateSearchView(message=null){syncLegacySearchState();el("hitCounter").textContent=searchModel.valid&&searchModel.current>=0?`${searchModel.current+1} / ${searchModel.matches.length}`:`0 / ${searchModel.matches.length}`;renderSearchResults(message);renderSearch();}
+function resetSearchForDocumentChange(){
+  searchModel.clear();
+  state.searchMatches=[];state.searchIndex=-1;state.searchValid=false;state.searchQuery="";state.searchOrigin=0;
+  const q=el("searchText"),r=el("replaceText");if(q)q.value="";if(r)r.value="";
+  if(el("hitCounter"))el("hitCounter").textContent="0 / 0";
+  updateSearchView("検索を実行してください");
+}
+function clearSearchResults(message="検索を実行してください"){searchModel.clear();updateSearchView(message)}
+function invalidateSearchResults(message="検索条件が変更されました。再検索してください"){if(!searchModel.valid&&!searchModel.matches.length)return;searchModel.clear();updateSearchView(message)}
+function executeSearch(fromCursor=true){const q=el("searchText").value;if(!q){clearSearchResults();return showToast("検索文字列を入力してください")}searchModel.execute(docText(),q,fromCursor?globalSelectionSafe().focus:0);updateSearchView();if(searchModel.current>=0)setCurrentHit(0,true);else showToast("一致する文字列はありません")}
+function renderSearchResults(message=null){
+  const box=el("searchResults"),inner=el("searchResultsInner");if(!box||!inner)return;
+  if(message||!searchModel.valid||!searchModel.matches.length){inner.style.height="100%";const empty=document.createElement("div");empty.className="searchEmpty";empty.textContent=message||"一致する検索結果はありません";inner.replaceChildren(empty);return}
+  const h=Math.max(28,Math.round((Number(settings.searchFontSize)||14)*2.15));state.resultItemHeight=h;const total=searchModel.matches.length,first=Math.max(0,Math.floor(box.scrollTop/h)-2),last=Math.min(total,first+Math.ceil(box.clientHeight/h)+6),frag=document.createDocumentFragment();
+  inner.style.height=(total*h)+"px";
+  for(let i=first;i<last;i++){const [a]=searchModel.matches[i],p=offsetToPos(a),d=document.createElement("div");d.className="searchResultItem"+(i===searchModel.current?" current":"");d.style.top=(i*h)+"px";d.dataset.index=i;const l=document.createElement("div");l.className="searchResultLine";l.textContent=`${p.line+1}行`;const t=document.createElement("div");t.className="searchResultText";t.textContent=state.lines[p.line]||"";d.append(l,t);frag.appendChild(d)}
+  inner.replaceChildren(frag);
+}
+function scrollMatchIntoView(offset){const p=offsetToPos(offset),lh=lineHeightPx(),max=Math.max(0,scroller.scrollHeight-scroller.clientHeight),target=lineTopPx(p.line)-(scroller.clientHeight-lh)/2;scroller.scrollTop=Math.max(0,Math.min(max,target));state.windowStart=-1;renderVirtual(true)}
+function ensureResultVisible(index){const box=el("searchResults"),h=Math.max(44,Math.round((Number(settings.searchFontSize)||14)*2.75)),top=index*h,bottom=top+h;if(top<box.scrollTop)box.scrollTop=top;else if(bottom>box.scrollTop+box.clientHeight)box.scrollTop=bottom-box.clientHeight;renderSearchResults()}
+function setCurrentHit(index,center=true){if(!searchModel.setCurrent(index))return;syncLegacySearchState();if(center)scrollMatchIntoView(searchModel.matches[index][0]);ensureResultVisible(index);updateSearchView()}
+function gotoMatch(dir){if(!searchModel.valid)return showToast("虫眼鏡ボタンで検索を実行してください");if(!searchModel.matches.length)return showToast("一致する文字列はありません");searchModel.next(dir);setCurrentHit(searchModel.current,true)}
+function replaceCurrent(){
+  if(!searchModel.valid||searchModel.current<0)return showToast("置換する検索結果を選択してください");
+  const before=snapshot(),[a,b]=searchModel.matches[searchModel.current],text=docText(),r=el("replaceText").value,next=text.slice(0,a)+r+text.slice(b),query=searchModel.query,origin=searchModel.origin,nextOffset=a+r.length;
+  state.lines=next.split("\n");markLayoutDirty();pushUndo(before);state.globalAnchor=state.globalFocus=nextOffset;state.windowStart=-1;updateDirty();
+  searchModel.execute(docText(),query,origin);let nextIndex=searchModel.matches.findIndex(([x])=>x>=nextOffset);if(nextIndex<0&&searchModel.matches.length)nextIndex=0;searchModel.current=nextIndex;renderVirtual(true);updateSearchView();if(nextIndex>=0)setCurrentHit(nextIndex,true);scheduleBackup();
+}
+function replaceAll(){if(!searchModel.valid)return showToast("虫眼鏡ボタンで検索を実行してください");const q=searchModel.query;if(!q)return;const re=new RegExp(escapeRegExp(q),"gi"),text=docText(),hits=text.slice(searchModel.origin).match(re);if(!hits)return showToast("一致する文字列はありません");pushUndo(snapshot());state.lines=(text.slice(0,searchModel.origin)+text.slice(searchModel.origin).replace(re,()=>el("replaceText").value)).split("\n");markLayoutDirty();state.windowStart=-1;updateDirty();searchModel.clear();renderVirtual(true);updateSearchView("全置換しました");scheduleBackup();showToast(`${hits.length}か所を置換しました`)}
+function refreshSearchPaneGeometry(){updateSearchPaneLayout();requestAnimationFrame(()=>{updateSearchPaneLayout();requestAnimationFrame(updateSearchPaneLayout)})}function setSearchOpen(v){state.searchOpen=!!v;el("searchPanel").classList.toggle("hidden",!v);el("searchBtn").classList.toggle("active",v);refreshSearchPaneGeometry();if(v)el("searchText").focus();else{document.activeElement?.blur();suppressKeyboard()}}function setReplaceOpen(v){state.replaceOpen=!!v;el("replaceRow").classList.toggle("hidden",!v);el("replaceToggleBtn").classList.toggle("active",v);refreshSearchPaneGeometry()}function singleDouble(btn,s,d){let t=0,last=0;btn.onclick=()=>{const n=Date.now();if(n-last<320){clearTimeout(t);last=0;d()}else{last=n;t=setTimeout(()=>{last=0;s()},330)}}}
+function activeTheme(){return settings.theme.startsWith("custom")?settings[settings.theme]:themeDefaults[settings.theme]}
+function updateCustomButtons(){el("editCustomLightBtn").classList.toggle("hidden",settings.theme!=="customLight");el("editCustomDarkBtn").classList.toggle("hidden",settings.theme!=="customDark")}
+function applySettings(preserveView=true){markLayoutDirty();const oldLH=Math.max(1,lineHeightPx()),topLine=scroller.scrollTop/oldLH,t=activeTheme(),dark=settings.theme==="dark"||settings.theme==="customDark",r=document.documentElement.style;settings.fontFamily=t.fontFamily;settings.fontSize=t.fontSize;settings.lineHeight=t.lineHeight;r.setProperty("--app-bg",dark?t.bg:"#f6f7f9");r.setProperty("--ui-font",t.uiFontFamily);r.setProperty("--ui-size",t.uiFontSize+"px");r.setProperty("--ui-bg",t.uiBg);r.setProperty("--ui-fg",t.uiFg);r.setProperty("--editor-font",t.fontFamily);r.setProperty("--editor-size",t.fontSize+"px");r.setProperty("--line-height",lineHeightPx()+"px");r.setProperty("--editor-bg",t.bg);r.setProperty("--editor-fg",t.fg);r.setProperty("--gutter-bg",t.gutterBg);r.setProperty("--gutter-fg",t.gutterFg);r.setProperty("--cursor-line-bg",t.cursorLine+"20");r.setProperty("--line",dark?"#3b3f46":"#d8dce3");r.setProperty("--panel",t.uiBg);r.setProperty("--text",t.uiFg);r.setProperty("--muted",dark?"#9ca3af":"#667085");r.setProperty("--muted-strong",dark?"#c4c9d1":"#475467");r.setProperty("--accent",dark?"#5b8def":"#2563eb");r.setProperty("--accent-bg",dark?"#2d3542":"#eaf1ff");r.setProperty("--button-bg",dark?"#292d33":"#f1f5f9");r.setProperty("--button-fg",t.uiFg);r.setProperty("--button-border",dark?"#454b54":"#cbd5e1");r.setProperty("--button-active-bg",dark?"#354052":"#dbeafe");r.setProperty("--input-bg",dark?"#17191d":"#ffffff");r.setProperty("--input-fg",t.uiFg);document.querySelector('meta[name="theme-color"]').content=dark?t.bg:t.uiBg;document.documentElement.style.backgroundColor=dark?t.bg:"#f6f7f9";document.body.style.backgroundColor=dark?t.bg:"#f6f7f9";document.documentElement.style.colorScheme=dark?"dark":"light";document.documentElement.style.setProperty("--search-pane-size",settings.searchFontSize+"px");document.documentElement.style.setProperty("--search-pane-width",settings.searchPaneWidth+"px");el("searchResults").style.height=settings.searchPaneHeight+"px";setActivePane(settings.activePane||"editor",false);updateCustomButtons();localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));if(preserveView)scroller.scrollTop=topLine*Math.max(1,lineHeightPx());state.windowStart=-1;renderVirtual(true)}
+function loadSettings(){try{const raw=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}");Object.assign(settings,raw);settings.customLight={...themeDefaults.customLight,...raw.customLight};settings.customDark={...themeDefaults.customDark,...raw.customDark}}catch(_){}settings.wrap=true;settings.searchFontSize=Math.max(9,Math.min(32,Number(settings.searchFontSize)||14));settings.searchPaneHeight=Math.max(72,Math.min(Math.round(innerHeight*.45),Number(settings.searchPaneHeight)||132));settings.searchPaneWidth=Math.max(240,Math.min(Math.round(innerWidth*.60),Number(settings.searchPaneWidth)||340));settings.activePane=settings.activePane==="search"?"search":"editor";["themeSelect","fontFamily","fontSize","lineHeight","lineNumberSelect","invisibleSelect","tabSize","bufferLines"].forEach(id=>{const map={themeSelect:"theme",fontFamily:"fontFamily",fontSize:"fontSize",lineHeight:"lineHeight",lineNumberSelect:"lineNumbers",invisibleSelect:"showInvisibles",tabSize:"tabSize",bufferLines:"bufferLines"};let v=settings[map[id]];if(typeof v==="boolean")v=String(v);el(id).value=String(v)});applySettings()}
+function readSettings(){settings.theme=el("themeSelect").value;const t=activeTheme();t.fontFamily=el("fontFamily").value;t.fontSize=Number(el("fontSize").value);t.lineHeight=Number(el("lineHeight").value);settings.lineNumbers=el("lineNumberSelect").value==="true";settings.showInvisibles=el("invisibleSelect").value==="true";settings.tabSize=Number(el("tabSize").value);settings.wrap=true;settings.bufferLines=Number(el("bufferLines").value);applySettings()}
+function loadColorForm(k){const t=settings[k];el("customThemeSelect").value=k;el("uiFontFamily").value=t.uiFontFamily;el("uiFontSize").value=t.uiFontSize;el("uiFg").value=t.uiFg;el("uiBg").value=t.uiBg;el("customFontFamily").value=t.fontFamily;el("customFontSize").value=t.fontSize;el("customLineHeight").value=t.lineHeight;el("editorFg").value=t.fg;el("editorBg").value=t.bg;el("gutterFg").value=t.gutterFg;el("gutterBg").value=t.gutterBg;el("cursorLineColor").value=t.cursorLine}
+function readColorForm(){const k=el("customThemeSelect").value,t=settings[k];t.uiFontFamily=el("uiFontFamily").value;t.uiFontSize=Math.max(9,Math.min(28,Number(el("uiFontSize").value)||16));t.uiFg=el("uiFg").value;t.uiBg=el("uiBg").value;t.fontFamily=el("customFontFamily").value;t.fontSize=Math.max(9,Math.min(36,Number(el("customFontSize").value)||16));t.lineHeight=Math.max(1.1,Math.min(2.5,Number(el("customLineHeight").value)||1.65));t.fg=el("editorFg").value;t.bg=el("editorBg").value;t.gutterFg=el("gutterFg").value;t.gutterBg=el("gutterBg").value;t.cursorLine=el("cursorLineColor").value;settings.theme=k;el("themeSelect").value=k;el("fontFamily").value=t.fontFamily;el("fontSize").value=String(t.fontSize);el("lineHeight").value=String(t.lineHeight);applySettings()}
+function openColorCustomize(k){loadColorForm(k);el("colorOverlay").classList.remove("hidden")}
+let numericTarget=null,numericOriginal="";function openNumericPad(input){numericTarget=input;numericOriginal=input.value;el("numericPadDisplay").textContent=input.value;el("numericPad").classList.remove("hidden")}function closeNumericPad(apply){if(!numericTarget)return;if(apply){let v=el("numericPadDisplay").textContent;const min=Number(numericTarget.dataset.min),max=Number(numericTarget.dataset.max);let n=Number(v);if(!Number.isFinite(n))n=Number(numericOriginal)||min;if(Number.isFinite(min))n=Math.max(min,n);if(Number.isFinite(max))n=Math.min(max,n);numericTarget.value=String(n);numericTarget.dispatchEvent(new Event("change",{bubbles:true}))}else numericTarget.value=numericOriginal;el("numericPad").classList.add("hidden");numericTarget=null}document.querySelectorAll("[data-numeric]").forEach(input=>input.addEventListener("click",()=>openNumericPad(input)));el("numericPad").querySelectorAll("[data-num]").forEach(b=>b.onclick=()=>{let v=el("numericPadDisplay").textContent,k=b.dataset.num;if(k==="back")v=v.slice(0,-1);else if(k==="."&&numericTarget?.dataset.numeric!=="decimal")return;else if(k==="."&&v.includes("."))return;else v+=k;el("numericPadDisplay").textContent=v});el("numericOkBtn").onclick=()=>closeNumericPad(true);el("numericCancelBtn").onclick=()=>closeNumericPad(false);
+function setActivePane(name,persist=true){state.activePane=name==="search"?"search":"editor";settings.activePane=state.activePane;el("searchResults").classList.toggle("activePane",state.activePane==="search");document.querySelector(".editorShell").classList.toggle("activePane",state.activePane==="editor");if(persist)localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}
+function changeActivePaneFont(delta){if(state.activePane==="search"){settings.searchFontSize=Math.max(9,Math.min(32,(Number(settings.searchFontSize)||14)+delta));state.resultItemHeight=Math.max(28,Math.round(settings.searchFontSize*2.15));document.documentElement.style.setProperty("--search-pane-size",settings.searchFontSize+"px");renderSearchResults();showToast(`検索ペーン文字サイズ ${settings.searchFontSize}`)}else{const t=activeTheme();t.fontSize=Math.max(9,Math.min(36,Number(t.fontSize||16)+delta));el("fontSize").value=String(t.fontSize);applySettings();showToast(`本文文字サイズ ${t.fontSize}`)}localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}
+function renderNavMarkers(){const layer=el("navMarkers");if(!layer)return;layer.innerHTML="";const total=Math.max(1,lineTopPx(state.lines.length)),height=Math.max(1,layer.clientHeight),used=new Set();function add(y,cls){const py=Math.max(0,Math.min(height,Math.round(y/total*height))),key=cls+":"+py;if(used.has(key))return;used.add(key);const d=document.createElement("div");d.className="navMarker "+cls;d.style.top=py+"px";layer.appendChild(d)}if(searchModel?.valid){for(let i=0;i<searchModel.matches.length;i++){const p=offsetToPos(searchModel.matches[i][0]);add(lineTopPx(p.line),i===searchModel.current?"current":"hit")}}const cp=offsetToPos(state.globalFocus||0);add(lineTopPx(cp.line),"cursor")}
+function isLandscapeSearchLayout(){
+  const type=screen.orientation&&screen.orientation.type;
+  if(type)return type.startsWith("landscape")&&Math.max(screen.width,screen.height)>=700;
+  return Math.max(screen.width||0,screen.height||0)>=700&&(screen.width||innerWidth)>(screen.height||innerHeight);
+}
+(function installPaneResize(){
+  const h=el("paneResizeHandle"),box=el("searchResults");let startPos=0,startSize=0,drag=false,landscape=false,frame=0,pendingSize=0;
+  function applyPending(){frame=0;if(!drag)return;if(landscape){settings.searchPaneWidth=Math.round(pendingSize);document.documentElement.style.setProperty("--search-pane-width",settings.searchPaneWidth+"px")}else{settings.searchPaneHeight=Math.round(pendingSize);box.style.height=settings.searchPaneHeight+"px"}}
+  h.onpointerdown=e=>{drag=true;landscape=isLandscapeSearchLayout();startPos=landscape?e.clientX:e.clientY;startSize=landscape?(Number(settings.searchPaneWidth)||340):box.getBoundingClientRect().height;h.setPointerCapture(e.pointerId);e.preventDefault()};
+  h.onpointermove=e=>{if(!drag)return;const pos=landscape?e.clientX:e.clientY;if(landscape){const max=Math.max(280,innerWidth*.65);pendingSize=Math.max(240,Math.min(max,startSize+(pos-startPos)))}else{const max=Math.max(100,innerHeight*.55);pendingSize=Math.max(72,Math.min(max,startSize+(pos-startPos)))}if(!frame)frame=requestAnimationFrame(applyPending);e.preventDefault()};
+  h.onpointerup=h.onpointercancel=e=>{if(!drag)return;if(frame){cancelAnimationFrame(frame);frame=0;applyPending()}drag=false;markLayoutDirty();state.windowStart=-1;renderVirtual(true);localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));try{h.releasePointerCapture(e.pointerId)}catch(_){}};
+})();
+function updateSearchPaneLayout(){
+  const landscape=isLandscapeSearchLayout();
+  document.body.classList.toggle("landscape-search-layout",landscape);
+  document.body.classList.toggle("search-pane-open",state.searchOpen&&landscape);
+  document.documentElement.style.setProperty("--search-pane-width",settings.searchPaneWidth+"px");
+  if(!landscape)el("searchResults").style.height=settings.searchPaneHeight+"px";
+  requestAnimationFrame(()=>{
+    const header=document.querySelector("header");
+    document.documentElement.style.setProperty("--landscape-header-height",Math.ceil(header.getBoundingClientRect().bottom)+"px");
+    markLayoutDirty();state.windowStart=-1;renderVirtual(true);
+  });
+}
+function positionMenu(btn,menu){const r=btn.getBoundingClientRect();menu.classList.remove("hidden");menu.style.left=Math.max(8,Math.min(innerWidth-menu.offsetWidth-8,r.right-menu.offsetWidth))+"px";menu.style.top=(r.bottom+6)+"px"}function hideFileMenu(){el("fileMenu").classList.add("hidden");el("fileBtn").classList.remove("active")}
+el("fileBtn").onclick=()=>{if(el("fileMenu").classList.contains("hidden")){positionMenu(el("fileBtn"),el("fileMenu"));el("fileBtn").classList.add("active")}else hideFileMenu()};el("fileMenuCloseBtn").onclick=hideFileMenu;el("fileNewBtn").onclick=()=>{hideFileMenu();guardUnsaved(()=>loadDocument("","新規文書.txt","","LF"))};el("fileOpenBtn").onclick=()=>{hideFileMenu();openFile()};el("fileSaveBtn").onclick=()=>{hideFileMenu();saveFile(false)};el("fileSaveAsBtn").onclick=()=>{hideFileMenu();saveFile(true)};
+el("undoBtn").onclick=undo;el("redoBtn").onclick=redo;el("tabBtn").onclick=()=>{editor.focus();editor.dispatchEvent(new KeyboardEvent("keydown",{key:"Tab",bubbles:true,cancelable:true}))};singleDouble(el("fontBtn"),()=>changeActivePaneFont(1),()=>changeActivePaneFont(-1));el("searchBtn").onclick=()=>setSearchOpen(!state.searchOpen);el("replaceToggleBtn").onclick=()=>setReplaceOpen(!state.replaceOpen);singleDouble(el("searchExecBtn"),()=>executeSearch(true),()=>executeSearch(false));singleDouble(el("searchArrowBtn"),()=>gotoMatch(1),()=>gotoMatch(-1));el("searchText").oninput=()=>invalidateSearchResults();el("searchText").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();executeSearch(true)}};el("searchClearBtn").onclick=()=>{el("searchText").value="";clearSearchResults();el("searchText").focus()};el("replaceClearBtn").onclick=()=>{el("replaceText").value="";el("replaceText").focus()};el("replaceBtn").onclick=replaceCurrent;el("replaceAllBtn").onclick=replaceAll;let searchPaneRAF=0;el("searchResults").onscroll=()=>{if(!searchPaneRAF)searchPaneRAF=requestAnimationFrame(()=>{searchPaneRAF=0;renderSearchResults()})};el("searchResults").onclick=e=>{setActivePane("search");const item=e.target.closest(".searchResultItem");if(item)setCurrentHit(Number(item.dataset.index),true)};el("searchResults").addEventListener("pointerdown",()=>setActivePane("search"));scroller.addEventListener("pointerdown",()=>setActivePane("editor"));editor.addEventListener("focus",()=>setActivePane("editor"));
+el("settingsBtn").onclick=()=>{el("themeSelect").value=settings.theme;updateCustomButtons();el("settingsOverlay").classList.remove("hidden")};el("themeSelect").onchange=()=>{settings.theme=el("themeSelect").value;const t=activeTheme();el("fontFamily").value=t.fontFamily;el("fontSize").value=String(t.fontSize);el("lineHeight").value=String(t.lineHeight);applySettings()};el("editCustomLightBtn").onclick=()=>openColorCustomize("customLight");el("editCustomDarkBtn").onclick=()=>openColorCustomize("customDark");el("colorCloseBtn").onclick=()=>{readColorForm();el("colorOverlay").classList.add("hidden");suppressKeyboard()};el("colorResetBtn").onclick=()=>{const k=el("customThemeSelect").value;settings[k]={...themeDefaults[k]};loadColorForm(k);readColorForm();showToast("カスタム配色を標準値に戻しました")};el("settingsCloseBtn").onclick=()=>{readSettings();el("settingsOverlay").classList.add("hidden");suppressKeyboard()};el("restoreBackupBtn").onclick=restoreBackup;el("clearBackupBtn").onclick=()=>confirmDialog("バックアップ削除","自動バックアップを削除しますか？",[["削除",clearBackup,true],["キャンセル",()=>{}]]);el("aboutBtn").onclick=()=>confirmDialog("STEdit情報","STEdit v0.3c6\n仮想表示エンジン搭載\nナビゲーションバー・可変検索ペーン搭載\nCopyright © 2026 Sugarware\nDesigned by Sugarware\nImplemented with ChatGPT",[["閉じる",()=>{},true]]);
+["fontSize","lineHeight"].forEach(id=>el(id).addEventListener("change",readSettings));["uiFontSize","customFontSize","customLineHeight"].forEach(id=>el(id).addEventListener("change",readColorForm));document.addEventListener("selectionchange",()=>{if(document.activeElement!==editor)return;if(state.programmaticSelection||state.navigationActive||performance.now()<state.selectionIgnoreUntil)return;requestAnimationFrame(()=>{if(state.programmaticSelection||state.navigationActive||performance.now()<state.selectionIgnoreUntil)return;const s=globalSelection();state.globalAnchor=s.anchor;state.globalFocus=s.focus;updateStatus()})});
+document.addEventListener("pointerdown",e=>{if(!el("fileMenu").classList.contains("hidden")&&!el("fileMenu").contains(e.target)&&e.target!==el("fileBtn"))hideFileMenu()});window.addEventListener("beforeunload",e=>{saveBackup();if(state.dirty){e.preventDefault();e.returnValue=""}});document.addEventListener("visibilitychange",()=>{if(document.hidden)saveBackup()});
+
+// iPad Safariではキーボード表示時にlayout viewportが縮まず、visual viewportだけが縮む場合がある。
+// 実際に見えている高さをアプリの高さへ反映し、キーボード上の空白領域を防ぐ。
+let viewportSyncFrame=0;
+function syncVisualViewport(){
+  if(viewportSyncFrame)cancelAnimationFrame(viewportSyncFrame);
+  viewportSyncFrame=requestAnimationFrame(()=>{
+    viewportSyncFrame=0;
+    const vv=window.visualViewport;
+    const h=Math.max(240,Math.round(vv?vv.height:window.innerHeight));
+    document.documentElement.style.setProperty("--visual-viewport-height",h+"px");
+    // Safariの自動スクロールで文書自体が動くのを戻す。編集領域内のスクロールは維持される。
+    if(window.scrollY!==0)window.scrollTo(0,0);
+    markLayoutDirty();state.windowStart=-1;
+    renderVirtual(true);
+  });
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener("resize",syncVisualViewport);
+  window.visualViewport.addEventListener("scroll",syncVisualViewport);
+}
+window.addEventListener("resize",syncVisualViewport);
+window.addEventListener("orientationchange",()=>setTimeout(updateSearchPaneLayout,80));
+if(screen.orientation)screen.orientation.addEventListener("change",()=>setTimeout(updateSearchPaneLayout,80));
+
+loadSettings();updateSearchPaneLayout();syncVisualViewport();loadDocument("","新規文書.txt","","LF");updateUndoButtons();
+</script>
+
+<script>
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch(err => console.warn("Service Worker registration failed:", err));
+  });
+}
+</script>
+</body>
+</html>
