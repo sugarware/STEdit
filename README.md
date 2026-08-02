@@ -1,4 +1,4 @@
-![スクリーン](https://github.com/sugarware/OTView/blob/main/IMG_0821.png)
+![スクリーン](https://github.com/sugarware/STEdit/blob/main/IMG_0919.png)
 # STEdit
 Simple Text Editor
 
