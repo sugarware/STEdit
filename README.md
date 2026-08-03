@@ -8,9 +8,9 @@ Simple Text Editor
 * undo,redo
 * 2つのペーン(本文、検索結果)
 * 検索と置換
-* ~~階層範囲でのAND検索……
 * 可変文字サイズ
-* 
+* 補助キーボード
+* ナビゲーションバー
 * PWA対応で、通常アプリっぽく使える
 
 ## [ここから実行出来ます！🚀](https://sugarware.github.io/STEdit)
